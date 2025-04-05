@@ -21,8 +21,6 @@ public class ThirdPersonCamera : MonoBehaviour
 
     private float rotation_x = 0.0f;
     private float rotation_y = 0.0f;
-    private Vector3 smoothVelocity = Vector3.zero;
-
 
     private void Start()
     {

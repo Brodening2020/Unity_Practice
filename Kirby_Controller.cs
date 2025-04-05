@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class Kirby_Controller : MonoBehaviour
 {
-    // キャラクター制御のパラメータ Headerと書くことでコンポーネントの欄に表示できてパラメータ調整可能
+    // キャラクター制御のパラメータ
     [Header("Movement Settings")]
     public float walkSpeed = 4.0f;
     public float runSpeed = 8.0f;
@@ -23,9 +23,13 @@ public class Kirby_Controller : MonoBehaviour
     private readonly int runParamID = Animator.StringToHash("IsRunning");
     private readonly int jumpParamID = Animator.StringToHash("IsJumping");
 
+    // カメラ設定
+    [Header("Camera Settings")]
+    [SerializeField] private Transform activeCameraTransform;
+    [SerializeField] private bool isFirstPersonView = false;
+
     // コンポーネント参照
     private CharacterController characterController;
-    private Transform cameraTransform;
 
     // 移動関連の変数
     private Vector3 moveDirection = Vector3.zero;
@@ -44,19 +48,11 @@ public class Kirby_Controller : MonoBehaviour
         // CharacterControllerの設定を調整
         if (characterController != null)
         {
-            // 皮膚の厚みを設定（値が大きすぎると地面を検出できない）
             characterController.skinWidth = skinWidth;
-
-            // 段差を乗り越える高さ
             characterController.stepOffset = stepOffset;
-
-            // 最小移動距離
             characterController.minMoveDistance = minMoveDistance;
-
-            // 中心を下方向に調整（地面に接触するように）
             characterController.center = new Vector3(0, 0, 0);
 
-            // レイヤー設定の確認
             if (gameObject.layer == 0) // Default layer
             {
                 Debug.Log("キャラクターが Default レイヤーにあります。もし問題が続くなら専用レイヤーの使用を検討してください。");
@@ -68,22 +64,36 @@ public class Kirby_Controller : MonoBehaviour
             return;
         }
 
-        if (Camera.main != null)
-            cameraTransform = Camera.main.transform;
-        else
-            Debug.LogError("Main Camera が見つかりません。");
+        // デフォルトでメインカメラを使用
+        if (activeCameraTransform == null && Camera.main != null)
+            activeCameraTransform = Camera.main.transform;
+        else if (activeCameraTransform == null)
+            Debug.LogError("カメラが設定されていません。");
 
         // アニメーターが設定されていない場合は自動的に取得
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
 
-        // 初期位置を少し上に設定して確実に落下するようにする
+        // 初期位置を少し上に設定
         transform.position = new Vector3(transform.position.x, transform.position.y + 0.1f, transform.position.z);
+    }
+
+    public void SetActiveCamera(Transform cameraTransform)
+    {
+        activeCameraTransform = cameraTransform;
+
+        // 1人称カメラかどうかを判定
+        isFirstPersonView = cameraTransform.GetComponent<FirstPersonCamera>() != null;
+
+        if (isFirstPersonView)
+            Debug.Log("1人称視点カメラに操作を切り替えました");
+        else
+            Debug.Log("3人称視点カメラに操作を切り替えました");
     }
 
     private void Update()
     {
-        if (characterController == null || cameraTransform == null)
+        if (characterController == null || activeCameraTransform == null)
             return;
 
         // 接地判定
@@ -109,8 +119,8 @@ public class Kirby_Controller : MonoBehaviour
             float vertical = Input.GetAxis("Vertical");
 
             // カメラの向きに合わせた移動方向を計算
-            Vector3 forward = cameraTransform.forward;
-            Vector3 right = cameraTransform.right;
+            Vector3 forward = activeCameraTransform.forward;
+            Vector3 right = activeCameraTransform.right;
 
             // Y軸の値を0にして水平方向のみの移動ベクトルを取得
             forward.y = 0f;
@@ -120,11 +130,20 @@ public class Kirby_Controller : MonoBehaviour
 
             moveDirection = (forward * vertical + right * horizontal).normalized;
 
-            // 移動入力がある場合はキャラクターの向きを移動方向に回転
+            // 移動入力がある場合はキャラクターの向きを調整
             if (moveDirection.magnitude > 0.1f)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                // 1人称視点の場合、カメラの向きに合わせてキャラクターを回転
+                if (isFirstPersonView)
+                {
+                    transform.rotation = Quaternion.Euler(0, activeCameraTransform.eulerAngles.y, 0);
+                }
+                // 3人称視点の場合、移動方向に向かって回転
+                else
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                }
             }
 
             // 走る入力（Shiftキー）を検出
@@ -143,7 +162,7 @@ public class Kirby_Controller : MonoBehaviour
             }
             else
             {
-                moveDirection.y = -0.5f; // 接地しているときは少し下向きの力を加える（地面への密着を維持）
+                moveDirection.y = -0.5f; // 接地しているときは少し下向きの力を加える
                 if (animator != null)
                     animator.SetBool(jumpParamID, false);
             }
@@ -157,15 +176,15 @@ public class Kirby_Controller : MonoBehaviour
         }
         else
         {
-            // 空中での水平移動の保持（現在の水平速度を維持）
+            // 空中での水平移動の保持
             float horizontalInput = Input.GetAxis("Horizontal");
             float verticalInput = Input.GetAxis("Vertical");
 
             if (Mathf.Abs(horizontalInput) > 0.1f || Mathf.Abs(verticalInput) > 0.1f)
             {
                 // カメラの向きに合わせた移動方向を計算
-                Vector3 forward = cameraTransform.forward;
-                Vector3 right = cameraTransform.right;
+                Vector3 forward = activeCameraTransform.forward;
+                Vector3 right = activeCameraTransform.right;
 
                 forward.y = 0f;
                 right.y = 0f;
