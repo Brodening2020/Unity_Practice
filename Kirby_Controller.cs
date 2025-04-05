@@ -74,7 +74,7 @@ public class Kirby_Controller : MonoBehaviour
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
 
-        // 初期位置を少し上に設定
+        // プレイヤーの初期位置を少し上に設定
         transform.position = new Vector3(transform.position.x, transform.position.y + 0.1f, transform.position.z);
     }
 
@@ -108,7 +108,7 @@ public class Kirby_Controller : MonoBehaviour
         // デバッグ表示
         if (debugMode)
         {
-            Debug.Log($"isGrounded: {isGrounded}, Y Position: {transform.position.y}, Y Velocity: {moveDirection.y}");
+            //Debug.Log($"isGrounded: {isGrounded}, Y Position: {transform.position.y}, Y Velocity: {moveDirection.y}");
         }
 
         // 接地しているとき
@@ -130,21 +130,21 @@ public class Kirby_Controller : MonoBehaviour
 
             moveDirection = (forward * vertical + right * horizontal).normalized;
 
-            // 移動入力がある場合はキャラクターの向きを調整
-            if (moveDirection.magnitude > 0.1f)
+            // 1人称視点の場合、カメラの向きに合わせてキャラクターを回転
+            if (isFirstPersonView)
             {
-                // 1人称視点の場合、カメラの向きに合わせてキャラクターを回転
-                if (isFirstPersonView)
-                {
-                    transform.rotation = Quaternion.Euler(0, activeCameraTransform.eulerAngles.y, 0);
-                }
-                // 3人称視点の場合、移動方向に向かって回転
-                else
-                {
-                    Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                transform.rotation = Quaternion.Euler(0, activeCameraTransform.eulerAngles.y, 0);
+            }
+            // 3人称視点の場合
+            else
+            {            
+            // 移動入力がある場合はキャラクターの向き移動方向に回転
+                if (moveDirection.magnitude > 0.1f) {
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
                 }
             }
+                
 
             // 走る入力（Shiftキー）を検出
             bool isRunning = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
@@ -212,7 +212,7 @@ public class Kirby_Controller : MonoBehaviour
         {
             if (debugMode)
             {
-                Debug.Log($"Ground distance: {hit.distance}, Ground layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)}");
+                //Debug.Log($"Ground distance: {hit.distance}, Ground layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)}");
                 Debug.DrawLine(transform.position, hit.point, Color.red);
             }
         }
