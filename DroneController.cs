@@ -6,9 +6,9 @@ public class DroneController : MonoBehaviour
     [Header("Movement Settings")]
     public float walkSpeed = 4.0f;
     public float runSpeed = 8.0f;
-    public float jumpForce = 8.0f;
+    public float ascendSpeed = 3.0f;
+    public float descendSpeed = 3.0f;
     public float rotationSpeed = 10.0f;
-    public float gravity = 20.0f;
 
     // CharacterController設定
     [Header("Character Controller Settings")]
@@ -33,12 +33,10 @@ public class DroneController : MonoBehaviour
 
     // 移動関連の変数
     private Vector3 moveDirection = Vector3.zero;
-    private bool isGrounded;
 
     // デバッグ用
     [Header("Debug")]
     public bool debugMode = true;
-    public bool forceGrounded = false;
     // デフォルトでこのカメラを操作するかどうか
     public bool isActive = false;
 
@@ -102,140 +100,73 @@ public class DroneController : MonoBehaviour
         if (characterController == null || activeCameraTransform == null)
             return;
 
-        // 接地判定
-        isGrounded = characterController.isGrounded;
-
-        // デバッグモードの場合、強制的に接地
-        if (debugMode && forceGrounded)
-        {
-            isGrounded = true;
-        }
-
         // デバッグ表示
         if (debugMode)
         {
-            //Debug.Log($"isGrounded: {isGrounded}, Y Position: {transform.position.y}, Y Velocity: {moveDirection.y}");
+            //Debug.Log($"Y Position: {transform.position.y}, Y Velocity: {moveDirection.y}");
         }
 
-        // 接地しているとき
-        if (isGrounded)
+        // 入力を取得
+        float horizontal = Input.GetAxis("Horizontal");
+        float vertical = Input.GetAxis("Vertical");
+
+        // カメラの向きに合わせた水平移動方向を計算
+        Vector3 forward = activeCameraTransform.forward;
+        Vector3 right = activeCameraTransform.right;
+
+        // Y軸の値を0にして水平方向のみの移動ベクトルを取得
+        forward.y = 0f;
+        right.y = 0f;
+        forward.Normalize();
+        right.Normalize();
+
+        moveDirection = (forward * vertical + right * horizontal).normalized;
+
+        // 1人称視点の場合、カメラの向きに合わせてキャラクターを回転
+        if (isFirstPersonView)
         {
-            // 入力を取得
-            float horizontal = Input.GetAxis("Horizontal");
-            float vertical = Input.GetAxis("Vertical");
-
-            // カメラの向きに合わせた移動方向を計算
-            Vector3 forward = activeCameraTransform.forward;
-            Vector3 right = activeCameraTransform.right;
-
-            // Y軸の値を0にして水平方向のみの移動ベクトルを取得
-            forward.y = 0f;
-            right.y = 0f;
-            forward.Normalize();
-            right.Normalize();
-
-            moveDirection = (forward * vertical + right * horizontal).normalized;
-
-            // 1人称視点の場合、カメラの向きに合わせてキャラクターを回転
-            if (isFirstPersonView)
-            {
-                transform.rotation = Quaternion.Euler(0, activeCameraTransform.eulerAngles.y, 0);
-            }
-            // 3人称視点の場合
-            else
-            {            
-            // 移動入力がある場合はキャラクターの向き移動方向に回転
-                if (moveDirection.magnitude > 0.1f) {
-                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-                }
-            }
-                
-
-            // 走る入力（Shiftキー）を検出
-            bool isRunning = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            float currentSpeed = isRunning ? runSpeed : walkSpeed;
-
-            // 速度を適用
-            moveDirection *= currentSpeed;
-
-            // ジャンプ入力を検出
-            if (Input.GetButtonDown("Jump"))
-            {
-                moveDirection.y = jumpForce;
-                if (animator != null)
-                    animator.SetBool(jumpParamID, true);
-            }
-            else
-            {
-                moveDirection.y = -0.5f; // 接地しているときは少し下向きの力を加える
-                if (animator != null)
-                    animator.SetBool(jumpParamID, false);
-            }
-
-            // アニメーションパラメータ更新
-            if (animator != null)
-            {
-                animator.SetBool(walkParamID, moveDirection.magnitude > 0.1f && !isRunning);
-                animator.SetBool(runParamID, moveDirection.magnitude > 0.1f && isRunning);
-            }
+            transform.rotation = Quaternion.Euler(0, activeCameraTransform.eulerAngles.y, 0);
         }
+        // 3人称視点の場合
         else
         {
-            // 空中での水平移動の保持
-            float horizontalInput = Input.GetAxis("Horizontal");
-            float verticalInput = Input.GetAxis("Vertical");
-
-            if (Mathf.Abs(horizontalInput) > 0.1f || Mathf.Abs(verticalInput) > 0.1f)
+            // 移動入力がある場合はキャラクターの向き移動方向に回転
+            if (moveDirection.magnitude > 0.1f)
             {
-                // カメラの向きに合わせた移動方向を計算
-                Vector3 forward = activeCameraTransform.forward;
-                Vector3 right = activeCameraTransform.right;
-
-                forward.y = 0f;
-                right.y = 0f;
-                forward.Normalize();
-                right.Normalize();
-
-                Vector3 airMove = (forward * verticalInput + right * horizontalInput).normalized;
-
-                // 空中での操作性を下げるために係数を小さくする
-                float airControl = 0.3f;
-                moveDirection.x = Mathf.Lerp(moveDirection.x, airMove.x * walkSpeed, Time.deltaTime * airControl);
-                moveDirection.z = Mathf.Lerp(moveDirection.z, airMove.z * walkSpeed, Time.deltaTime * airControl);
-            }
-
-            // 重力の適用
-            moveDirection.y -= gravity * Time.deltaTime;
-        }
-
-        // Y速度に下限を設定して極端な落下速度を防ぐ
-        moveDirection.y = Mathf.Max(moveDirection.y, -50f);
-
-        // 下方向のレイキャストで地面までの距離を確認
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, 100f))
-        {
-            if (debugMode)
-            {
-                //Debug.Log($"Ground distance: {hit.distance}, Ground layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)}");
-                Debug.DrawLine(transform.position, hit.point, Color.red);
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             }
         }
-        else if (debugMode)
+
+        // 走る入力（Shiftキー）を検出
+        bool isRunning = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        float currentSpeed = isRunning ? runSpeed : walkSpeed;
+
+        // 水平速度を適用
+        moveDirection *= currentSpeed;
+
+        // Y方向の移動：スペースキーで上昇、Shiftで下降
+        moveDirection.y = 0f; // デフォルトでY方向は0
+        if (Input.GetKey(KeyCode.Space))
         {
-            Debug.Log("地面が検出されませんでした。");
+            moveDirection.y = ascendSpeed;
+        }
+        else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+        {
+            moveDirection.y = -descendSpeed;
+        }
+
+        // アニメーションパラメータ更新（ドローンにアニメーターがある場合）
+        if (animator != null)
+        {
+            animator.SetBool(walkParamID, moveDirection.magnitude > 0.1f && !isRunning);
+            animator.SetBool(runParamID, moveDirection.magnitude > 0.1f && isRunning);
+            // ジャンプアニメーションはドローンでは使用しない
+            animator.SetBool(jumpParamID, false);
         }
 
         // キャラクターを移動
-        CollisionFlags collisionFlags = characterController.Move(moveDirection * Time.deltaTime);
-
-        // 接地を強制する（床が検出されない問題の一時的な対策）
-        if ((collisionFlags & CollisionFlags.Below) != 0)
-        {
-            isGrounded = true;
-            moveDirection.y = 0;
-        }
+        characterController.Move(moveDirection * Time.deltaTime);
     }
 
     private void UpdateCamera()
