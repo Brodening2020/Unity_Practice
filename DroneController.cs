@@ -40,6 +40,10 @@ public class DroneController : MonoBehaviour
     // デフォルトでこのカメラを操作するかどうか
     public bool isActive = false;
 
+    // ReturnDrone.csによるドローンの呼び戻しがあるかのフラグと位置
+    public bool returnDrone = false;
+    public Vector3 returnDestination = Vector3.zero;
+
     private void Start()
     {
         // 必要なコンポーネントの取得
@@ -104,6 +108,15 @@ public class DroneController : MonoBehaviour
         if (debugMode)
         {
             //Debug.Log($"Y Position: {transform.position.y}, Y Velocity: {moveDirection.y}");
+        }
+
+        //ReturnDroneの呼び戻し処理がある場合はそっち優先
+        if (returnDrone)
+        {
+            returnDrone = false;
+            Vector3 returnVector = returnDestination - characterController.transform.position;
+            characterController.Move(returnVector);
+            return;
         }
 
         // 入力を取得

@@ -122,20 +122,13 @@ public class PlayerController : MonoBehaviour
 
         if (isActive)
         {
-            Debug.Log("Activeです。");
-
-
             // 接地しているとき
             if (isGrounded)
             {
-                Debug.Log("接地しています。");
-
                 // 入力を取得
                 float horizontal = Input.GetAxis("Horizontal");
                 float vertical = Input.GetAxis("Vertical");
-                
-                Debug.Log("入力検出しています。");
-                
+                                
                 // カメラの向きに合わせた移動方向を計算
                 Vector3 forward = activeCameraTransform.forward;
                 Vector3 right = activeCameraTransform.right;
