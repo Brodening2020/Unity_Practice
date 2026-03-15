@@ -1,5 +1,11 @@
 using UnityEngine;
 
+/// <summary>
+/// デフォルトの三人称視点のカメラ
+/// ちゃんとプレイヤーの後ろの位置に来るようになっている（Position Settingsで変更可能）
+/// カメラが埋まった時に自動で手前に来て埋まらないようにする
+/// </summary>
+
 public class ThirdPersonCamera : MonoBehaviour
 {
     //インスペクタにTargetという欄を作成

@@ -1,5 +1,10 @@
 using UnityEngine;
 
+/// <summary>
+/// プレイヤーの一人称視点のカメラ
+/// ちゃんとプレイヤーの目線の位置に来るようになっている（Position Settingsで変更可能）
+/// </summary>
+
 public class FirstPersonCamera : MonoBehaviour
 {
     [Header("Target Settings")]

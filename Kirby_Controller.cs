@@ -1,5 +1,7 @@
 using UnityEngine;
 
+// Kirbyのキャラクター制御スクリプト．外部からChangeControl(true)を呼び出すと操作可能になる．
+
 public class Kirby_Controller : MonoBehaviour
 {
     // キャラクター制御のパラメータ
@@ -31,6 +33,10 @@ public class Kirby_Controller : MonoBehaviour
     // コンポーネント参照
     private CharacterController characterController;
 
+    // Camera switching is handled by CameraSwitcher. This controller only needs the active camera transform.
+    // (Previously used CameraManager for view switching.)
+    // public CameraManager cameraManager; // no longer used
+
     // 移動関連の変数
     private Vector3 moveDirection = Vector3.zero;
     private bool isGrounded;
@@ -39,6 +45,9 @@ public class Kirby_Controller : MonoBehaviour
     [Header("Debug")]
     public bool debugMode = true;
     public bool forceGrounded = false;
+
+    // このキャラを操作するかどうかのフラグ
+    public bool isActive;
 
     private void Start()
     {
@@ -111,124 +120,197 @@ public class Kirby_Controller : MonoBehaviour
             //Debug.Log($"isGrounded: {isGrounded}, Y Position: {transform.position.y}, Y Velocity: {moveDirection.y}");
         }
 
-        // 接地しているとき
-        if (isGrounded)
+        if (isActive)
         {
-            // 入力を取得
-            float horizontal = Input.GetAxis("Horizontal");
-            float vertical = Input.GetAxis("Vertical");
-
-            // カメラの向きに合わせた移動方向を計算
-            Vector3 forward = activeCameraTransform.forward;
-            Vector3 right = activeCameraTransform.right;
-
-            // Y軸の値を0にして水平方向のみの移動ベクトルを取得
-            forward.y = 0f;
-            right.y = 0f;
-            forward.Normalize();
-            right.Normalize();
-
-            moveDirection = (forward * vertical + right * horizontal).normalized;
-
-            // 1人称視点の場合、カメラの向きに合わせてキャラクターを回転
-            if (isFirstPersonView)
+            // 接地しているとき
+            if (isGrounded)
             {
-                transform.rotation = Quaternion.Euler(0, activeCameraTransform.eulerAngles.y, 0);
-            }
-            // 3人称視点の場合
-            else
-            {            
-            // 移動入力がある場合はキャラクターの向き移動方向に回転
-                if (moveDirection.magnitude > 0.1f) {
-                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-                }
-            }
-                
+                // 入力を取得
+                float horizontal = Input.GetAxis("Horizontal");
+                float vertical = Input.GetAxis("Vertical");
 
-            // 走る入力（Shiftキー）を検出
-            bool isRunning = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            float currentSpeed = isRunning ? runSpeed : walkSpeed;
-
-            // 速度を適用
-            moveDirection *= currentSpeed;
-
-            // ジャンプ入力を検出
-            if (Input.GetButtonDown("Jump"))
-            {
-                moveDirection.y = jumpForce;
-                if (animator != null)
-                    animator.SetBool(jumpParamID, true);
-            }
-            else
-            {
-                moveDirection.y = -0.5f; // 接地しているときは少し下向きの力を加える
-                if (animator != null)
-                    animator.SetBool(jumpParamID, false);
-            }
-
-            // アニメーションパラメータ更新
-            if (animator != null)
-            {
-                animator.SetBool(walkParamID, moveDirection.magnitude > 0.1f && !isRunning);
-                animator.SetBool(runParamID, moveDirection.magnitude > 0.1f && isRunning);
-            }
-        }
-        else
-        {
-            // 空中での水平移動の保持
-            float horizontalInput = Input.GetAxis("Horizontal");
-            float verticalInput = Input.GetAxis("Vertical");
-
-            if (Mathf.Abs(horizontalInput) > 0.1f || Mathf.Abs(verticalInput) > 0.1f)
-            {
                 // カメラの向きに合わせた移動方向を計算
                 Vector3 forward = activeCameraTransform.forward;
                 Vector3 right = activeCameraTransform.right;
 
+                // Y軸の値を0にして水平方向のみの移動ベクトルを取得
                 forward.y = 0f;
                 right.y = 0f;
                 forward.Normalize();
                 right.Normalize();
 
-                Vector3 airMove = (forward * verticalInput + right * horizontalInput).normalized;
+                moveDirection = (forward * vertical + right * horizontal).normalized;
 
-                // 空中での操作性を下げるために係数を小さくする
-                float airControl = 0.3f;
-                moveDirection.x = Mathf.Lerp(moveDirection.x, airMove.x * walkSpeed, Time.deltaTime * airControl);
-                moveDirection.z = Mathf.Lerp(moveDirection.z, airMove.z * walkSpeed, Time.deltaTime * airControl);
+                // 1人称視点の場合、カメラの向きに合わせてキャラクターを回転
+                if (isFirstPersonView)
+                {
+                    transform.rotation = Quaternion.Euler(0, activeCameraTransform.eulerAngles.y, 0);
+                }
+                // 3人称視点の場合
+                else
+                {            
+                // 移動入力がある場合はキャラクターの向き移動方向に回転
+                    if (moveDirection.magnitude > 0.1f) {
+                    Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                    }
+                }
+                
+
+                // 走る入力（Shiftキー）を検出
+                bool isRunning = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                float currentSpeed = isRunning ? runSpeed : walkSpeed;
+
+                // 速度を適用
+                moveDirection *= currentSpeed;
+
+                // ジャンプ入力を検出
+                if (Input.GetButtonDown("Jump"))
+                {
+                    moveDirection.y = jumpForce;
+                    if (animator != null)
+                        animator.SetBool(jumpParamID, true);
+                }
+                else
+                {
+                    moveDirection.y = -0.5f; // 接地しているときは少し下向きの力を加える
+                    if (animator != null)
+                        animator.SetBool(jumpParamID, false);
+                }
+
+                // アニメーションパラメータ更新
+                if (animator != null)
+                {
+                    animator.SetBool(walkParamID, moveDirection.magnitude > 0.1f && !isRunning);
+                    animator.SetBool(runParamID, moveDirection.magnitude > 0.1f && isRunning);
+                }
             }
-
-            // 重力の適用
-            moveDirection.y -= gravity * Time.deltaTime;
-        }
-
-        // Y速度に下限を設定して極端な落下速度を防ぐ
-        moveDirection.y = Mathf.Max(moveDirection.y, -50f);
-
-        // 下方向のレイキャストで地面までの距離を確認
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, 100f))
-        {
-            if (debugMode)
+            else
             {
-                //Debug.Log($"Ground distance: {hit.distance}, Ground layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)}");
-                Debug.DrawLine(transform.position, hit.point, Color.red);
+                // 空中での水平移動の保持
+                float horizontalInput = Input.GetAxis("Horizontal");
+                float verticalInput = Input.GetAxis("Vertical");
+
+                if (Mathf.Abs(horizontalInput) > 0.1f || Mathf.Abs(verticalInput) > 0.1f)
+                {
+                    // カメラの向きに合わせた移動方向を計算
+                    Vector3 forward = activeCameraTransform.forward;
+                    Vector3 right = activeCameraTransform.right;
+
+                    forward.y = 0f;
+                    right.y = 0f;
+                    forward.Normalize();
+                    right.Normalize();
+
+                    Vector3 airMove = (forward * verticalInput + right * horizontalInput).normalized;
+
+                    // 空中での操作性を下げるために係数を小さくする
+                    float airControl = 0.3f;
+                    moveDirection.x = Mathf.Lerp(moveDirection.x, airMove.x * walkSpeed, Time.deltaTime * airControl);
+                    moveDirection.z = Mathf.Lerp(moveDirection.z, airMove.z * walkSpeed, Time.deltaTime * airControl);
+                }
+
+                // 重力の適用
+                moveDirection.y -= gravity * Time.deltaTime;
+            }
+
+            // Y速度に下限を設定して極端な落下速度を防ぐ
+            moveDirection.y = Mathf.Max(moveDirection.y, -50f);
+
+            // 下方向のレイキャストで地面までの距離を確認
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, Vector3.down, out hit, 100f))
+            {
+                if (debugMode)
+                {
+                    //Debug.Log($"Ground distance: {hit.distance}, Ground layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)}");
+                    Debug.DrawLine(transform.position, hit.point, Color.red);
+                }
+            }
+            else if (debugMode)
+            {
+                Debug.Log("地面が検出されませんでした。");
+            }
+
+            // キャラクターを移動
+            CollisionFlags collisionFlags = characterController.Move(moveDirection * Time.deltaTime);
+
+            // 接地を強制する（床が検出されない問題の一時的な対策）
+            if ((collisionFlags & CollisionFlags.Below) != 0)
+            {
+                isGrounded = true;
+                moveDirection.y = 0;
             }
         }
-        else if (debugMode)
+        // else
+        // {
+        //     // 空中での水平移動の保持
+        //     float horizontalInput = Input.GetAxis("Horizontal");
+        //     float verticalInput = Input.GetAxis("Vertical");
+
+        //     if (Mathf.Abs(horizontalInput) > 0.1f || Mathf.Abs(verticalInput) > 0.1f)
+        //     {
+        //         // カメラの向きに合わせた移動方向を計算
+        //         Vector3 forward = activeCameraTransform.forward;
+        //         Vector3 right = activeCameraTransform.right;
+
+        //         forward.y = 0f;
+        //         right.y = 0f;
+        //         forward.Normalize();
+        //         right.Normalize();
+
+        //         Vector3 airMove = (forward * verticalInput + right * horizontalInput).normalized;
+
+        //         // 空中での操作性を下げるために係数を小さくする
+        //         float airControl = 0.3f;
+        //         moveDirection.x = Mathf.Lerp(moveDirection.x, airMove.x * walkSpeed, Time.deltaTime * airControl);
+        //         moveDirection.z = Mathf.Lerp(moveDirection.z, airMove.z * walkSpeed, Time.deltaTime * airControl);
+        //     }
+
+        //     // 重力の適用
+        //     moveDirection.y -= gravity * Time.deltaTime;
+            
+        //     // Y速度に下限を設定して極端な落下速度を防ぐ
+        //     moveDirection.y = Mathf.Max(moveDirection.y, -50f);
+
+        //     // 下方向のレイキャストで地面までの距離を確認
+        //     RaycastHit hit;
+        //     if (Physics.Raycast(transform.position, Vector3.down, out hit, 100f))
+        //     {
+        //         if (debugMode)
+        //         {
+        //             //Debug.Log($"Ground distance: {hit.distance}, Ground layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)}");
+        //             Debug.DrawLine(transform.position, hit.point, Color.red);
+        //         }
+        //     }
+        //     else if (debugMode)
+        //     {
+        //         Debug.Log("地面が検出されませんでした。");
+        //     }
+
+        //     // キャラクターを移動
+        //     CollisionFlags collisionFlags = characterController.Move(moveDirection * Time.deltaTime);
+
+        //     // 接地を強制する（床が検出されない問題の一時的な対策）
+        //     if ((collisionFlags & CollisionFlags.Below) != 0)
+        //     {
+        //         isGrounded = true;
+        //         moveDirection.y = 0;
+        //     }
+        // }
+    }
+
+    // キャラクターの操作を切り替えるメソッド：外部からtrueを渡さないと操作できない
+    public void ChangeControl(bool active)
+    {
+        isActive = active;
+        if (isActive)
         {
-            Debug.Log("地面が検出されませんでした。");
+            Debug.Log("このキャラクターを操作可能にしました。");
         }
-
-        // キャラクターを移動
-        CollisionFlags collisionFlags = characterController.Move(moveDirection * Time.deltaTime);
-
-        // 接地を強制する（床が検出されない問題の一時的な対策）
-        if ((collisionFlags & CollisionFlags.Below) != 0)
+        else
         {
-            isGrounded = true;
-            moveDirection.y = 0;
+            Debug.Log("このキャラクターの操作を無効にしました。");
         }
     }
 }

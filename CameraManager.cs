@@ -1,5 +1,9 @@
 using UnityEngine;
 
+/// <summary>
+/// プレイヤーのオブジェクトにつけるカメラ機能
+/// </summary>
+
 public class CameraManager : MonoBehaviour
 {
     [Header("Camera References")]
@@ -58,7 +62,7 @@ public class CameraManager : MonoBehaviour
         }
     }
 
-    void SwitchToFirstPerson()
+    public void SwitchToFirstPerson()
     {
         isFirstPersonView = true;
 
@@ -81,7 +85,7 @@ public class CameraManager : MonoBehaviour
         Debug.Log("1人称視点に切り替えました");
     }
 
-    void SwitchToThirdPerson()
+    public void SwitchToThirdPerson()
     {
         isFirstPersonView = false;
 
@@ -102,5 +106,22 @@ public class CameraManager : MonoBehaviour
             playerController.SetActiveCamera(thirdPersonCamera.transform);
 
         Debug.Log("3人称視点に切り替えました");
+    }
+
+    public void SwitchToOtherCharacter()
+    {
+        isFirstPersonView = false;
+
+        // すべてのカメラを無効にする
+        if (firstPersonCamera != null)
+            firstPersonCamera.enabled = false;
+        if (thirdPersonCamera != null)
+            thirdPersonCamera.enabled = false;
+
+        // // コントローラーにリモートカメラ情報を更新
+        // if (playerController != null)
+        //     playerController.SetActiveCamera(remoteCameraTransform);
+
+        Debug.Log("リモートカメラに切り替えました");
     }
 }
