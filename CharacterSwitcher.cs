@@ -78,15 +78,15 @@ public class CharacterSwitcher : MonoBehaviour
         if (go == null)
             return;
 
-        // Kirby_Controller または RemoteCam_Controller のどちらかを探す
-        var kirby = go.GetComponent<Kirby_Controller>();
-        if (kirby != null)
+        // PlayerController または DroneController のどちらかを探す
+        var player = go.GetComponent<PlayerController>();
+        if (player != null)
         {
-            kirby.ChangeControl(active);
+            player.ChangeControl(active);
             return;
         }
 
-        var drone = go.GetComponent<RemoteCam_Controller>();
+        var drone = go.GetComponent<DroneController>();
         if (drone != null)
         {
             drone.isActive = active;

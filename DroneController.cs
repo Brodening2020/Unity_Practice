@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class RemoteCam_Controller : MonoBehaviour
+public class DroneController : MonoBehaviour
 {
     // キャラクター制御のパラメータ
     [Header("Movement Settings")]

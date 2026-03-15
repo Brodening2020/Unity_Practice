@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class Kirby_Animation : MonoBehaviour
+public class PlayerAnimation : MonoBehaviour
 {
     internal bool isGrounded;
     private Animator animator;

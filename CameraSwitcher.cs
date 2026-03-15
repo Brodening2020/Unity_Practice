@@ -20,14 +20,14 @@ public class CameraSwitcher : MonoBehaviour
     }
 
     [Header("Cameras")]
-    public Camera kirbyFirst;
-    public Camera kirbyThird;
+    public Camera playerFirst;
+    public Camera playerThird;
     public Camera droneFirst;
     public Camera droneThird;
 
     [Header("Controllers")]
-    public Kirby_Controller kirbyController;
-    public RemoteCam_Controller droneController;
+    public PlayerController playerController;
+    public DroneController droneController;
 
     // ゲーム開始時にデフォルトで使うキャラクターとカメラの設定
     [Header("Initial State")]
@@ -77,8 +77,8 @@ public class CameraSwitcher : MonoBehaviour
     private void UpdateActiveCamera()
     {
         // すべてのカメラを無効化
-        SetCameraEnabled(kirbyFirst, false);
-        SetCameraEnabled(kirbyThird, false);
+        SetCameraEnabled(playerFirst, false);
+        SetCameraEnabled(playerThird, false);
         SetCameraEnabled(droneFirst, false);
         SetCameraEnabled(droneThird, false);
 
@@ -89,9 +89,9 @@ public class CameraSwitcher : MonoBehaviour
         // コントローラーにアクティブなカメラを通知
         if (active != null)
         {
-            if (CurrentCharacter == CharacterType.Kirby && kirbyController != null)
+            if (CurrentCharacter == CharacterType.Kirby && playerController != null)
             {
-                kirbyController.SetActiveCamera(active.transform);
+                playerController.SetActiveCamera(active.transform);
             }
             else if (CurrentCharacter == CharacterType.Drone && droneController != null)
             {
@@ -103,7 +103,7 @@ public class CameraSwitcher : MonoBehaviour
     private Camera GetActiveCamera()
     {
         if (CurrentCharacter == CharacterType.Kirby)
-            return (CurrentView == ViewMode.FirstPerson) ? kirbyFirst : kirbyThird;
+            return (CurrentView == ViewMode.FirstPerson) ? playerFirst : playerThird;
 
         return (CurrentView == ViewMode.FirstPerson) ? droneFirst : droneThird;
     }
