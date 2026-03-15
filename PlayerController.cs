@@ -249,62 +249,6 @@ public class PlayerController : MonoBehaviour
                 moveDirection.y = 0;
             }
         }
-        // else
-        // {
-        //     // 空中での水平移動の保持
-        //     float horizontalInput = Input.GetAxis("Horizontal");
-        //     float verticalInput = Input.GetAxis("Vertical");
-
-        //     if (Mathf.Abs(horizontalInput) > 0.1f || Mathf.Abs(verticalInput) > 0.1f)
-        //     {
-        //         // カメラの向きに合わせた移動方向を計算
-        //         Vector3 forward = activeCameraTransform.forward;
-        //         Vector3 right = activeCameraTransform.right;
-
-        //         forward.y = 0f;
-        //         right.y = 0f;
-        //         forward.Normalize();
-        //         right.Normalize();
-
-        //         Vector3 airMove = (forward * verticalInput + right * horizontalInput).normalized;
-
-        //         // 空中での操作性を下げるために係数を小さくする
-        //         float airControl = 0.3f;
-        //         moveDirection.x = Mathf.Lerp(moveDirection.x, airMove.x * walkSpeed, Time.deltaTime * airControl);
-        //         moveDirection.z = Mathf.Lerp(moveDirection.z, airMove.z * walkSpeed, Time.deltaTime * airControl);
-        //     }
-
-        //     // 重力の適用
-        //     moveDirection.y -= gravity * Time.deltaTime;
-            
-        //     // Y速度に下限を設定して極端な落下速度を防ぐ
-        //     moveDirection.y = Mathf.Max(moveDirection.y, -50f);
-
-        //     // 下方向のレイキャストで地面までの距離を確認
-        //     RaycastHit hit;
-        //     if (Physics.Raycast(transform.position, Vector3.down, out hit, 100f))
-        //     {
-        //         if (debugMode)
-        //         {
-        //             //Debug.Log($"Ground distance: {hit.distance}, Ground layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)}");
-        //             Debug.DrawLine(transform.position, hit.point, Color.red);
-        //         }
-        //     }
-        //     else if (debugMode)
-        //     {
-        //         Debug.Log("地面が検出されませんでした。");
-        //     }
-
-        //     // キャラクターを移動
-        //     CollisionFlags collisionFlags = characterController.Move(moveDirection * Time.deltaTime);
-
-        //     // 接地を強制する（床が検出されない問題の一時的な対策）
-        //     if ((collisionFlags & CollisionFlags.Below) != 0)
-        //     {
-        //         isGrounded = true;
-        //         moveDirection.y = 0;
-        //     }
-        // }
     }
 
     // キャラクターの操作を切り替えるメソッド：外部からtrueを渡さないと操作できない
