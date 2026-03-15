@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.tvOS;
 
 /// <summary>
 /// 4つのカメラ（Kirby/Drone の 一人称/三人称）を管理し、
