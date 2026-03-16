@@ -4,6 +4,8 @@ public class ShowGameMenu : MonoBehaviour
 {
     public GameObject menu;
 
+    public KeyCode toggleKey = KeyCode.O;
+
     void Start()
     {
         menu.SetActive(false);
@@ -11,7 +13,7 @@ public class ShowGameMenu : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.O))
+        if (Input.GetKeyDown(toggleKey))
         {
             menu.SetActive(!menu.activeSelf);
 

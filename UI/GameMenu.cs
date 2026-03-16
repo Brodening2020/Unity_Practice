@@ -8,12 +8,24 @@ using System.Runtime.CompilerServices;
 public class GameMenu : MonoBehaviour
 {
     public CharacterController playerController;
+    
+    public ShowGameMenu showGameMenu;
+    public GameObject ShowGameMenuObject;
+    public GameObject KeyBoardSettings;
 
     public void Start()
     {
         string path = Application.persistentDataPath;
         Debug.Log(path);
         LoadGame();
+    }
+
+    // ゲームメニューから，キーボード設定画面に遷移する
+    public void ShowKeyBoardSettings()
+    {
+        showGameMenu.menu.SetActive(false);
+        ShowGameMenuObject.SetActive(false);
+        KeyBoardSettings.SetActive(true);
     }
 
     public void SaveGame()
