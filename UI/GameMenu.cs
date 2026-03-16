@@ -1,13 +1,24 @@
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.IO;
+using System.Runtime.CompilerServices;
+
 
 public class GameMenu : MonoBehaviour
 {
-    public Transform player;
+    public CharacterController playerController;
+
+    public void Start()
+    {
+        string path = Application.persistentDataPath;
+        Debug.Log(path);
+        LoadGame();
+    }
 
     public void SaveGame()
     {
-        SaveSystem.Save(player);
+        SaveSystem.Save(playerController.transform);
     }
 
     public void LoadGame()
@@ -16,11 +27,13 @@ public class GameMenu : MonoBehaviour
 
         if (data != null)
         {
-            player.position = new Vector3(
+            Vector3 savedPosition = new Vector3(
                 data.playerX,
-                data.playerY,
+                data.playerY + 1.0f, //ロード時にプレイヤーが埋まらないようにY座標を少し上げる
                 data.playerZ
             );
+            Vector3 moveVector = savedPosition - playerController.transform.position;
+            playerController.Move(moveVector);
         }
     }
 

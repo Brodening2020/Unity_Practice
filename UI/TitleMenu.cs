@@ -5,12 +5,12 @@ public class TitleMenu : MonoBehaviour
 {
     public void NewGame(string sceneName)
     {
+        SaveSystem.StartNew();
         SceneManager.LoadScene(sceneName);
     }
 
     public void Continue(string sceneName)
     {
-        //SaveSystem.Load();
         SceneManager.LoadScene(sceneName);
     }
 
