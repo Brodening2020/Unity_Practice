@@ -1,10 +1,14 @@
 using UnityEngine;
 
-// 看板やドアなどのInteract判定を行うクラス　このスクリプトを看板やドアなどのオブジェクトにアタッチする
-public class DialogueInteractJudge : MonoBehaviour
+// ドアのInteract判定を行うクラス　このスクリプトをドアのオブジェクトにアタッチする
+// ドアにはColliderを2つ作っておく　直接つけるのはInteract判定のColliderで Is Trigger=True
+// Interact判定の方はプレイヤーのものよりかなり大きくする必要
+// もう1つは1つは子に空オブジェクトを作りドア閉まってる時のの当たり判定とする Is Trigger=False
+
+public class DoorInteractJudge : MonoBehaviour
 {
 
-    public DialogueManager dialogueManager;
+    public DoorManager doorManager;
 
     private bool canInteract = false;
 
@@ -14,7 +18,7 @@ public class DialogueInteractJudge : MonoBehaviour
     {
         if (canInteract && Input.GetKeyDown(toggleKey))
         {
-            dialogueManager.StartDialogue();
+            doorManager.ToggleDoor();
 
             // プレイヤー操作停止
             // GetComponent<PlayerMovement>().enabled = false;
