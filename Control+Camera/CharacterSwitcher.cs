@@ -18,6 +18,8 @@ public class CharacterSwitcher : MonoBehaviour
     [Header("Camera Switcher")]
     public CameraSwitcher cameraSwitcher;
 
+    public KeyCode toggleKey = KeyCode.Q;
+
     void Start()
     {
         if (charaList == null || charaList.Count == 0)
@@ -41,7 +43,7 @@ public class CharacterSwitcher : MonoBehaviour
     void Update()
     {
         // Qキーで操作キャラを切り替える
-        if (Input.GetKeyDown(KeyCode.Q))
+        if (Input.GetKeyDown(toggleKey))
         {
             ChangeCharacter(nowChara);
         }

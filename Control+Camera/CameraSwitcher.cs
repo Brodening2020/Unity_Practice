@@ -36,6 +36,8 @@ public class CameraSwitcher : MonoBehaviour
     public CharacterType CurrentCharacter { get; private set; }
     public ViewMode CurrentView { get; private set; }
 
+    public KeyCode toggleKey = KeyCode.V;
+
     private void Start()
     {
         CurrentCharacter = startCharacter;
@@ -48,7 +50,7 @@ public class CameraSwitcher : MonoBehaviour
     private void Update()
     {
         // Vキーで現在操作中のキャラクターの視点を切り替える
-        if (Input.GetKeyDown(KeyCode.V))
+        if (Input.GetKeyDown(toggleKey))
         {
             ToggleView();
         }
