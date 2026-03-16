@@ -12,7 +12,7 @@ public class DoorManager : MonoBehaviour
     {
         isOpen = !isOpen;
 
-        animator.SetBool("isOpen", isOpen);
+        animator.SetBool("IsOpen", isOpen);
 
         // 当たり判定
         doorCollider.enabled = !isOpen;
